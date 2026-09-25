@@ -1,0 +1,202 @@
+{
+  "name": "Wind Hair — Báo cáo 19:00 qua Zalo (từ Supabase)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 19 * * *"
+            }
+          ]
+        }
+      },
+      "id": "ab753ddd-b2a4-4ae6-b4c7-ce2e918bd680",
+      "name": "19:00 mỗi ngày",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        200
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "686f3a5b-8ebd-40cd-8fa3-2ecdcdfabdaa",
+      "name": "Bấm để test ngay",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c1",
+              "name": "zaloBotToken",
+              "value": "điền_token_zalo_bot",
+              "type": "string"
+            },
+            {
+              "id": "c2",
+              "name": "chatIds",
+              "value": "điền_chat_id_1,điền_chat_id_2,điền_chat_id_3",
+              "type": "string"
+            },
+            {
+              "id": "c3",
+              "name": "supabaseUrl",
+              "value": "https://điền_project.supabase.co",
+              "type": "string"
+            },
+            {
+              "id": "c4",
+              "name": "businessId",
+              "value": "điền_business_id",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "25dfcd14-b0d1-455e-bdb3-5b223f13ca44",
+      "name": "⚙️ Cấu hình",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        300
+      ],
+      "notes": "Điền token Zalo Bot, chat_id 3 thành viên (cách nhau dấu phẩy), Project URL và business_id của Supabase. Khoá service_role để trong credential 'Supabase service key', KHÔNG dán vào đây.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.supabaseUrl }}/rest/v1/rpc/daily_report",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ p_business: $json.businessId }) }}",
+        "options": {}
+      },
+      "id": "b32d4011-ab20-429a-a02e-e042c0f0d529",
+      "name": "Lấy báo cáo từ Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_ME",
+          "name": "Supabase service key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const cfg = $('⚙️ Cấu hình').first().json;\nconst r = $input.first().json;\nconst text = r.text || ('⚠️ Không lấy được báo cáo: ' + JSON.stringify(r).slice(0, 300));\nconst ids = String(cfg.chatIds || '').split(',').map(s => s.trim()).filter(Boolean);\nreturn ids.map(id => ({ json: { chat_id: id, text, token: cfg.zaloBotToken } }));"
+      },
+      "id": "05f8f75d-6d99-4cd7-9892-476acdba8ce2",
+      "name": "Chia cho 3 thành viên",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://bot-api.zaloplatforms.com/bot{{ $json.token }}/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ chat_id: $json.chat_id, text: $json.text }) }}",
+        "options": {}
+      },
+      "id": "032101a3-56f4-4480-bd85-80a645c13980",
+      "name": "Gửi Zalo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        300
+      ],
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "19:00 mỗi ngày": {
+      "main": [
+        [
+          {
+            "node": "⚙️ Cấu hình",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bấm để test ngay": {
+      "main": [
+        [
+          {
+            "node": "⚙️ Cấu hình",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚙️ Cấu hình": {
+      "main": [
+        [
+          {
+            "node": "Lấy báo cáo từ Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lấy báo cáo từ Supabase": {
+      "main": [
+        [
+          {
+            "node": "Chia cho 3 thành viên",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chia cho 3 thành viên": {
+      "main": [
+        [
+          {
+            "node": "Gửi Zalo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Ho_Chi_Minh"
+  },
+  "active": false,
+  "pinData": {},
+  "meta": {}
+}
