@@ -218,7 +218,7 @@ const MENU=[
 
 /* =================== ĐĂNG NHẬP =================== */
 function viewLogin(msg){const t=S.loginTab;
-root.innerHTML=`<div class="login"><section class="art"><img src="${LOGO_W}" alt="Wind Hair House"><p>Hệ thống vận hành</p><span class="small muted">Chỉ dành cho chủ tiệm và nhân sự được cấp quyền. Khách đặt lịch tại <a href="#datlich" style="color:var(--text)">trang đặt lịch</a>.</span></section>
+root.innerHTML=`<div class="login"><section class="art"><img src="${LOGO_W}" alt="Wind Hair House"><p>Hệ thống vận hành</p><span class="small muted">Chỉ dành cho chủ tiệm và nhân sự được cấp quyền. Quý khách đặt lịch tại <a href="#datlich" style="color:var(--text)">trang đặt lịch</a>.</span></section>
 <section class="form"><div class="box"><h1>${t==='in'?'Đăng nhập':t==='up'?'Kích hoạt tài khoản':'Quên mật khẩu'}</h1>
 <div class="tabs" role="tablist"><button type="button" data-lt="in" class="${t==='in'?'on':''}">Đăng nhập</button><button type="button" data-lt="up" class="${t==='up'?'on':''}">Kích hoạt</button><button type="button" data-lt="fg" class="${t==='fg'?'on':''}">Quên mật khẩu</button></div>
 ${t==='up'?'<p class="small muted" style="margin:0;line-height:1.6">Dùng đúng email chủ tiệm đã cấp cho bạn. Hệ thống tự gán vai trò theo lời mời.</p>':''}
@@ -521,21 +521,21 @@ const PAGES={congviec:pCongviec,kho:pKho,baocao:pBaocao,chamsoc:pChamsoc,tongqua
 
 /* =================== TRANG ĐẶT LỊCH CỦA KHÁCH (công khai) =================== */
 const B={step:0,cat:null,sv:null,day:todayStr(),time:'',slots:null,name:'',phone:'',err:'',done:null};
-async function bookPage(){if(!B.cat){const {data,error}=await db.rpc('public_catalog',{p_business:BUSINESS_ID});if(error){root.innerHTML=`<div class="bk"><div class="body"><p class="err">Không tải được dữ liệu. Kiểm tra cấu hình.</p></div></div>`;return}B.cat=data;B.sv=data.services[0]?.id}
+async function bookPage(){if(!B.cat){const {data,error}=await db.rpc('public_catalog',{p_business:BUSINESS_ID});if(error){root.innerHTML=`<div class="bk"><div class="body"><p class="err">Dạ hệ thống đang bận, quý khách vui lòng tải lại trang giúp tiệm ạ.</p></div></div>`;return}B.cat=data;B.sv=data.services[0]?.id}
 const svc=B.cat.services.find(s=>s.id===B.sv);let body='';
-if(B.step===0)body=`<h2>Chị muốn làm gì?</h2><p>Đồng giá mọi độ dài tóc. Báo giá trước, không phát sinh.</p>${B.cat.services.map(s=>`<button type="button" class="svc ${s.id===B.sv?'on':''}" data-sv="${s.id}" aria-pressed="${s.id===B.sv}"><span>${esc(s.name)}<small>${durTxt(s.duration)}</small></span><em>${vnd(s.price)}</em></button>`).join('')}`;
+if(B.step===0)body=`<h2>Quý khách muốn làm dịch vụ nào ạ?</h2><p>Tiệm đồng giá mọi độ dài tóc, báo giá trước, không phát sinh ạ.</p>${B.cat.services.map(s=>`<button type="button" class="svc ${s.id===B.sv?'on':''}" data-sv="${s.id}" aria-pressed="${s.id===B.sv}"><span>${esc(s.name)}<small>${durTxt(s.duration)}</small></span><em>${vnd(s.price)}</em></button>`).join('')}`;
 if(B.step===1){if(B.slots===null){B.slots=[];db.rpc('available_slots',{p_business:BUSINESS_ID,p_service:B.sv,p_date:B.day}).then(({data})=>{B.slots=(data||[]).map(x=>x.slot);B.loaded=true;bookPage()});}
 const days=[0,1,2,3,4,5,6].map(i=>addDays(todayStr(),i));
-body=`<h2>Chọn ngày và giờ</h2><p>${esc(svc.name)}, ${durTxt(svc.duration)}. Chỉ hiện giờ còn thợ rảnh và kịp xong trước ${B.cat.business.cutoff}.</p>
+body=`<h2>Quý khách chọn ngày và giờ ạ</h2><p>${esc(svc.name)}, ${durTxt(svc.duration)}. Tiệm chỉ hiện những khung giờ còn thợ và kịp hoàn thành trước ${B.cat.business.cutoff} ạ.</p>
 <div class="g4">${days.map(d=>{const x=new Date(d+'T00:00:00+07:00');return `<button type="button" class="day ${d===B.day?'on':''}" data-day="${d}"><small>${x.toLocaleDateString('vi-VN',{timeZone:TZ,weekday:'short'})}</small><b>${d.slice(8)}</b></button>`}).join('')}</div>
-<div class="g4">${B.loaded?(B.slots.length?B.slots.map(t=>`<button type="button" class="slot ${t===B.time?'on':''}" data-t="${t}">${t}</button>`).join(''):'<p style="grid-column:1/-1">Ngày này đã kín lịch. Chị chọn ngày khác giúp tiệm nhé.</p>'):'<p style="grid-column:1/-1">Đang tìm giờ trống…</p>'}</div>`}
-if(B.step===2)body=`<h2>Thông tin của chị</h2><p>Không cần tạo tài khoản. Tiệm nhận ra khách quen qua số điện thoại.</p>
-<label class="f">Tên gọi<input class="in" id="bn" value="${esc(B.name)}" autocomplete="name" placeholder="Ví dụ: Chị Lan"></label>
+<div class="g4">${B.loaded?(B.slots.length?B.slots.map(t=>`<button type="button" class="slot ${t===B.time?'on':''}" data-t="${t}">${t}</button>`).join(''):'<p style="grid-column:1/-1">Dạ ngày này tiệm đã kín lịch, quý khách vui lòng chọn giúp tiệm ngày khác ạ.</p>'):'<p style="grid-column:1/-1">Tiệm đang tìm giờ trống, quý khách chờ tiệm chút ạ…</p>'}</div>`}
+if(B.step===2)body=`<h2>Thông tin của quý khách</h2><p>Quý khách không cần tạo tài khoản ạ. Tiệm nhận ra khách quen qua số điện thoại.</p>
+<label class="f">Tên của quý khách<input class="in" id="bn" value="${esc(B.name)}" autocomplete="name" placeholder="Ví dụ: Chị Lan / Anh Nam"></label>
 <label class="f">Số điện thoại<input class="in" id="bp" type="tel" inputmode="tel" value="${esc(B.phone)}" autocomplete="tel" placeholder="09xx xxx xxx"></label>
 ${B.err?`<span class="err" role="alert">${esc(B.err)}</span>`:''}<p>${esc(svc.name)}, ${B.day.split('-').reverse().join('/')} lúc ${B.time}. <b>${vnd(svc.price)}</b></p>`;
-if(B.step===3)body=`<div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:14px"><h2>Đã giữ chỗ cho ${esc(B.name)}</h2><p>${esc(B.done.service)} lúc ${esc(B.done.start)}.<br>${B.done.status==='cho_duyet'?'Dịch vụ này cần thợ xem tóc trước, tiệm sẽ gọi xác nhận trong ngày.':'Tiệm sẽ nhắn nhắc lịch trước 1 ngày.'}</p><p>Mã lịch #${B.done.code}</p></div>`;
-const lbl=B.step===1&&!B.time?'Chọn một khung giờ':['Tiếp tục','Tiếp tục','Xác nhận đặt lịch','Đặt thêm lịch'][B.step];
-root.innerHTML=`<div class="bk"><header><img src="${LOGO_W}" alt="Wind Hair House"><small style="color:#BDBDB8">${esc(B.cat.business.address||'')}. Nhận khách từ ${B.cat.business.open}.</small></header><div class="body">${body}</div>
+if(B.step===3)body=`<div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:14px"><h2>Tiệm đã giữ chỗ cho ${esc(B.name)} ạ</h2><p>${esc(B.done.service)} lúc ${esc(B.done.start)}.<br>${B.done.status==='cho_duyet'?'Dạ dịch vụ này cần thợ xem tóc trước, tiệm sẽ gọi điện xác nhận với quý khách trong ngày ạ.':'Tiệm sẽ nhắn tin nhắc lịch trước 1 ngày ạ. Hẹn gặp quý khách!'}</p><p>Mã lịch của quý khách: #${B.done.code}</p></div>`;
+const lbl=B.step===1&&!B.time?'Vui lòng chọn khung giờ ạ':['Tiếp tục','Tiếp tục','Xác nhận đặt lịch','Đặt thêm lịch'][B.step];
+root.innerHTML=`<div class="bk"><header><img src="${LOGO_W}" alt="Wind Hair House"><small style="color:#BDBDB8">${esc(B.cat.business.address||'')}. Tiệm nhận khách từ ${B.cat.business.open} ạ.</small></header><div class="body">${body}</div>
 <footer>${B.step===1||B.step===2?'<button type="button" class="back" id="bb">Quay lại</button>':''}<button type="button" class="go" id="bg" ${B.step===1&&!B.time?'disabled':''}>${lbl}</button></footer></div>`;
 root.querySelectorAll('[data-sv]').forEach(b=>b.onclick=()=>{B.sv=b.dataset.sv;B.time='';B.slots=null;B.loaded=false;bookPage()});
 root.querySelectorAll('[data-day]').forEach(b=>b.onclick=()=>{B.day=b.dataset.day;B.time='';B.slots=null;B.loaded=false;bookPage()});
